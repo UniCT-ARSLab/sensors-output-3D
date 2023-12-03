@@ -1,13 +1,13 @@
 import {
-    BufferGeometry,
+    BoxGeometry,
     Color,
+    ColorRepresentation,
     DirectionalLight,
     DoubleSide,
     HemisphereLight,
-    Line,
-    LineBasicMaterial,
     Mesh,
     MeshPhongMaterial,
+    MeshStandardMaterial,
     NearestFilter,
     PerspectiveCamera,
     PlaneGeometry,
@@ -15,7 +15,6 @@ import {
     SRGBColorSpace,
     Scene,
     TextureLoader,
-    Vector3,
     WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -95,24 +94,24 @@ function initRobot(scene: Scene, type: ROBOT = ROBOT.GRANDE): void {
     });
 }
 
-function drawLines(scene: Scene): void {
-    const material = new LineBasicMaterial({
-        color: 0xff0000,
-    });
-
-    const points = [];
-    points.push(new Vector3(0, 5, 0));
-    points.push(new Vector3(5, 5, 0));
-
-    const geometry = new BufferGeometry().setFromPoints(points);
-
-    const line = new Line(geometry, material);
-    scene.add(line);
+function drawLine(
+    scene: Scene,
+    x: number,
+    y: number,
+    z: number,
+    length: number,
+    color: ColorRepresentation = 0xff0000
+): void {
+    const material = new MeshStandardMaterial({ color });
+    const mesh = new Mesh(new BoxGeometry(0.25, length, 0.25), material);
+    mesh.position.set(x, y, z);
+    mesh.rotateX(degToRad(90));
+    scene.add(mesh);
 }
 
 function main() {
     const renderer = new WebGLRenderer({ antialias: true });
-    renderer.setSize(1500, 1000); // 3000 x 2000
+    renderer.setSize(1500, 1000);
     const canvas = document.body.appendChild(renderer.domElement);
 
     const fov = 45;
@@ -129,11 +128,17 @@ function main() {
     const scene = new Scene();
     scene.background = new Color('black');
 
-    // initCheckboard(scene);
     initMap(scene);
     addLight(scene);
-    initRobot(scene);
-    drawLines(scene);
+    initRobot(scene, ROBOT.GRANDE);
+
+    drawLine(scene, 1.1, 0, -5, 10);
+    drawLine(scene, -1.1, 0, -5, 8);
+
+    drawLine(scene, 1.1, 0, 5, 7, 0x00ff00);
+    drawLine(scene, -1.1, 0, 5, 6, 0x00ff00);
+
+    drawLine(scene, -1.1, 5, -5, 8, 0xffff00);
 
     function resizeRendererToDisplaySize(renderer: WebGLRenderer) {
         const canvas = renderer.domElement;
