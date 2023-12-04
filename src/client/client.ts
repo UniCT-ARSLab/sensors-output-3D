@@ -1,9 +1,9 @@
 import {
     BoxGeometry,
     Color,
-    ColorRepresentation,
     DirectionalLight,
     DoubleSide,
+    Group,
     HemisphereLight,
     Mesh,
     MeshPhongMaterial,
@@ -21,19 +21,20 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
+import { SCANDATA_MOCK } from './data.model';
 
 const enum ROBOT {
     PICCOLO = 'piccolo',
     GRANDE = 'grande',
 }
+
 // ROBOT dimensions 300x300x350 mediamente (h x w x l)
 const ROBOT_HEIGHT = 300;
 const ROBOT_WIDTH = 300;
 const ROBOT_LENGTH = 350;
 
-function mmToUnit(mm: number): number {
-    return mm / 100;
-}
+const LINEWIDTH = 0.05;
+let angle = 180; // start from 180 to be in the front of the robot
 
 function initMap(scene: Scene): void {
     const loader = new TextureLoader();
@@ -94,28 +95,62 @@ function initRobot(scene: Scene, type: ROBOT = ROBOT.GRANDE): void {
     });
 }
 
-function drawLine(
-    scene: Scene,
-    x: number,
-    y: number,
-    z: number,
-    length: number,
-    color: ColorRepresentation = 0xff0000
-): void {
-    const material = new MeshStandardMaterial({ color });
-    const mesh = new Mesh(new BoxGeometry(0.25, length, 0.25), material);
-    mesh.position.set(x, y, z);
-    mesh.rotateX(degToRad(90));
-    scene.add(mesh);
+function drawLineLidar(scene: Scene, length: number, anglePoint: number): void {
+    const material = new MeshStandardMaterial({ color: 0xffff00 });
+
+    const geometry = new BoxGeometry(LINEWIDTH, LINEWIDTH, length);
+    const mesh = new Mesh(geometry, material);
+
+    // hack to rotate properly the object
+    const group = new Group();
+    group.add(mesh);
+    mesh.position.set(0, 0, 0);
+    group.rotation.y = degToRad(angle);
+
+    mesh.position.set(0, 5, 0 + length / 2);
+
+    scene.add(group);
+
+    angle += anglePoint;
 }
 
-function main() {
+function drawBackToF(scene: Scene, tof1: number, tof2: number): void {
+    const material = new MeshStandardMaterial({ color: 0xff0000 });
+    const mesh_tof1 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof1), material);
+    mesh_tof1.position.set(0.75, 0, 1.7 + tof1 / 2);
+    scene.add(mesh_tof1);
+
+    const mesh_tof2 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof2), material);
+    mesh_tof2.position.set(-1.1, 0, 1.7 + tof2 / 2);
+    scene.add(mesh_tof2);
+}
+
+function drawFrontToF(scene: Scene, tof1: number, tof2: number): void {
+    const material = new MeshStandardMaterial({ color: 0x00ff00 });
+    const mesh_tof1 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof1), material);
+    mesh_tof1.position.set(0.75, 0, -1 - tof1 / 2);
+    scene.add(mesh_tof1);
+
+    const mesh_tof2 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof2), material);
+    mesh_tof2.position.set(-1.1, 0, -1 - tof2 / 2);
+    scene.add(mesh_tof2);
+}
+
+function drawLidarData(scene: Scene, scandata: number[]): void {
+    const POINT_ANGLE = 360 / scandata.length;
+    for (let i = 0; i < scandata.length; i++) {
+        drawLineLidar(scene, scandata[i] / 1000, POINT_ANGLE);
+    }
+    angle = 180;
+}
+
+function main(): void {
     const renderer = new WebGLRenderer({ antialias: true });
     renderer.setSize(1500, 1000);
     const canvas = document.body.appendChild(renderer.domElement);
 
     const fov = 45;
-    const aspect = 2; // the canvas default
+    const aspect = 2;
     const near = 0.1;
     const far = 100;
     const camera = new PerspectiveCamera(fov, aspect, near, far);
@@ -128,19 +163,19 @@ function main() {
     const scene = new Scene();
     scene.background = new Color('black');
 
+    // const axesHelper = new AxesHelper(30);
+    // scene.add(axesHelper);
+
     initMap(scene);
     addLight(scene);
     initRobot(scene, ROBOT.GRANDE);
 
-    drawLine(scene, 1.1, 0, -5, 10);
-    drawLine(scene, -1.1, 0, -5, 8);
+    drawBackToF(scene, 7, 5);
+    drawFrontToF(scene, 4, 3);
 
-    drawLine(scene, 1.1, 0, 5, 7, 0x00ff00);
-    drawLine(scene, -1.1, 0, 5, 6, 0x00ff00);
+    drawLidarData(scene, SCANDATA_MOCK);
 
-    drawLine(scene, -1.1, 5, -5, 8, 0xffff00);
-
-    function resizeRendererToDisplaySize(renderer: WebGLRenderer) {
+    function resizeRendererToDisplaySize(renderer: WebGLRenderer): boolean {
         const canvas = renderer.domElement;
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
