@@ -1,6 +1,7 @@
 import {
     BoxGeometry,
     Color,
+    ColorRepresentation,
     DirectionalLight,
     DoubleSide,
     Group,
@@ -9,6 +10,7 @@ import {
     MeshPhongMaterial,
     MeshStandardMaterial,
     NearestFilter,
+    Object3DEventMap,
     PerspectiveCamera,
     PlaneGeometry,
     RepeatWrapping,
@@ -21,11 +23,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
-import { SCANDATA_MOCK } from './data.model';
+import { SCANDATA_MOCK, SCANDATA_MOCK_2 } from './data.model';
 
 const enum ROBOT {
     PICCOLO = 'piccolo',
     GRANDE = 'grande',
+}
+
+const enum COLOR {
+    GREEN = 0x00ff00,
+    RED = 0xff0000,
+    YELLOW = 0xffff00,
 }
 
 // ROBOT dimensions 300x300x350 mediamente (h x w x l)
@@ -35,6 +43,12 @@ const ROBOT_LENGTH = 350;
 
 const LINEWIDTH = 0.05;
 let angle = 180; // start from 180 to be in the front of the robot
+const lidarLines: Group<Object3DEventMap>[] = [];
+
+let mesh_back_tof1: Mesh;
+let mesh_back_tof2: Mesh;
+let mesh_front_tof1: Mesh;
+let mesh_front_tof2: Mesh;
 
 function initMap(scene: Scene): void {
     const loader = new TextureLoader();
@@ -95,51 +109,74 @@ function initRobot(scene: Scene, type: ROBOT = ROBOT.GRANDE): void {
     });
 }
 
-function drawLineLidar(scene: Scene, length: number, anglePoint: number): void {
-    const material = new MeshStandardMaterial({ color: 0xffff00 });
-
+function getLineMesh(length: number, color: ColorRepresentation): Mesh {
+    const material = new MeshStandardMaterial({ color });
     const geometry = new BoxGeometry(LINEWIDTH, LINEWIDTH, length);
     const mesh = new Mesh(geometry, material);
+    return mesh;
+}
+
+function drawLineLidar(scene: Scene, length: number, anglePoint: number): void {
+    const mesh = getLineMesh(length, COLOR.YELLOW);
 
     // hack to rotate properly the object
     const group = new Group();
     group.add(mesh);
     mesh.position.set(0, 0, 0);
-    group.rotation.y = degToRad(angle);
+    group.rotation.y = degToRad(anglePoint);
 
     mesh.position.set(0, 5, 0 + length / 2);
 
+    lidarLines.push(group);
     scene.add(group);
-
-    angle += anglePoint;
 }
 
 function drawBackToF(scene: Scene, tof1: number, tof2: number): void {
-    const material = new MeshStandardMaterial({ color: 0xff0000 });
-    const mesh_tof1 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof1), material);
-    mesh_tof1.position.set(0.75, 0, 1.7 + tof1 / 2);
-    scene.add(mesh_tof1);
+    if (mesh_back_tof1) {
+        scene.remove(mesh_back_tof1);
+    }
+    mesh_back_tof1 = getLineMesh(tof1, COLOR.RED);
+    mesh_back_tof1.position.set(0.75, 0, 1.7 + tof1 / 2);
+    scene.add(mesh_back_tof1);
 
-    const mesh_tof2 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof2), material);
-    mesh_tof2.position.set(-1.1, 0, 1.7 + tof2 / 2);
-    scene.add(mesh_tof2);
+    if (mesh_back_tof2) {
+        scene.remove(mesh_back_tof2);
+    }
+    mesh_back_tof2 = getLineMesh(tof2, COLOR.RED);
+    mesh_back_tof2.position.set(-1.1, 0, 1.7 + tof2 / 2);
+    scene.add(mesh_back_tof2);
 }
 
 function drawFrontToF(scene: Scene, tof1: number, tof2: number): void {
-    const material = new MeshStandardMaterial({ color: 0x00ff00 });
-    const mesh_tof1 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof1), material);
-    mesh_tof1.position.set(0.75, 0, -1 - tof1 / 2);
-    scene.add(mesh_tof1);
+    if (mesh_front_tof1) {
+        scene.remove(mesh_front_tof1);
+    }
+    mesh_front_tof1 = getLineMesh(tof1, COLOR.GREEN);
+    mesh_front_tof1.position.set(0.75, 0, -1 - tof1 / 2);
+    scene.add(mesh_front_tof1);
 
-    const mesh_tof2 = new Mesh(new BoxGeometry(LINEWIDTH, LINEWIDTH, tof2), material);
-    mesh_tof2.position.set(-1.1, 0, -1 - tof2 / 2);
-    scene.add(mesh_tof2);
+    if (mesh_front_tof2) {
+        scene.remove(mesh_front_tof2);
+    }
+    mesh_front_tof2 = getLineMesh(tof2, COLOR.GREEN);
+    mesh_front_tof2.position.set(-1.1, 0, -1 - tof2 / 2);
+    scene.add(mesh_front_tof2);
+}
+
+function emptyLidar(scene: Scene): void {
+    for (const l of lidarLines) {
+        scene.remove(l);
+    }
+    lidarLines.length = 0;
 }
 
 function drawLidarData(scene: Scene, scandata: number[]): void {
+    emptyLidar(scene);
+
     const POINT_ANGLE = 360 / scandata.length;
     for (let i = 0; i < scandata.length; i++) {
-        drawLineLidar(scene, scandata[i] / 1000, POINT_ANGLE);
+        drawLineLidar(scene, scandata[i] / 1000, angle);
+        angle += POINT_ANGLE;
     }
     angle = 180;
 }
@@ -163,9 +200,6 @@ function main(): void {
     const scene = new Scene();
     scene.background = new Color('black');
 
-    // const axesHelper = new AxesHelper(30);
-    // scene.add(axesHelper);
-
     initMap(scene);
     addLight(scene);
     initRobot(scene, ROBOT.GRANDE);
@@ -174,6 +208,20 @@ function main(): void {
     drawFrontToF(scene, 4, 3);
 
     drawLidarData(scene, SCANDATA_MOCK);
+
+    // simulate dynamic data
+    // setTimeout(() => {
+    //     drawBackToF(scene, 2, 3);
+    //     drawFrontToF(scene, 8, 7);
+    // }, 5_000);
+
+    // setTimeout(() => {
+    //     drawLidarData(scene, SCANDATA_MOCK_2);
+    // }, 5_000);
+
+    // setTimeout(() => {
+    //     drawLidarData(scene, SCANDATA_MOCK);
+    // }, 10_000);
 
     function resizeRendererToDisplaySize(renderer: WebGLRenderer): boolean {
         const canvas = renderer.domElement;
