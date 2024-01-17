@@ -23,7 +23,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
-import { SCANDATA_MOCK, SCANDATA_MOCK_2 } from './data.model';
+import { SCANDATA_MOCK } from './data.model';
 
 const enum ROBOT {
     PICCOLO = 'piccolo',
@@ -42,7 +42,7 @@ const ROBOT_WIDTH = 300;
 const ROBOT_LENGTH = 350;
 
 const LINEWIDTH = 0.05;
-let angle = 180; // start from 180 to be in the front of the robot
+let angle = 0;
 const lidarLines: Group<Object3DEventMap>[] = [];
 
 let mesh_back_tof1: Mesh;
@@ -116,8 +116,13 @@ function getLineMesh(length: number, color: ColorRepresentation): Mesh {
     return mesh;
 }
 
-function drawLineLidar(scene: Scene, length: number, anglePoint: number): void {
-    const mesh = getLineMesh(length, COLOR.YELLOW);
+function drawLineLidar(
+    scene: Scene,
+    length: number,
+    anglePoint: number,
+    color = COLOR.YELLOW
+): void {
+    const mesh = getLineMesh(length, color);
 
     // hack to rotate properly the object
     const group = new Group();
@@ -173,12 +178,20 @@ function emptyLidar(scene: Scene): void {
 function drawLidarData(scene: Scene, scandata: number[]): void {
     emptyLidar(scene);
 
-    const POINT_ANGLE = 360 / scandata.length;
-    for (let i = 0; i < scandata.length; i++) {
-        drawLineLidar(scene, scandata[i] / 1000, angle);
-        angle += POINT_ANGLE;
+    const TOT_DEADZONE = 1024 - 725 + 44;
+
+    const POINT_ANGLE = 360 / 1024;
+    const LEFT_START_ANGLE = -(TOT_DEADZONE / 2) * POINT_ANGLE;
+    angle = LEFT_START_ANGLE;
+    for (const i of scandata) {
+        drawLineLidar(scene, i / 1000, angle);
+        angle -= POINT_ANGLE;
     }
-    angle = 180;
+    angle = LEFT_START_ANGLE;
+
+    // draw dead zone borders
+    drawLineLidar(scene, 4, angle + POINT_ANGLE, COLOR.RED);
+    drawLineLidar(scene, 4, angle + POINT_ANGLE * TOT_DEADZONE, COLOR.RED);
 }
 
 function main(): void {
