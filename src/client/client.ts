@@ -23,7 +23,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
-import { SCANDATA_MOCK } from './data.model';
+import { Websocket, WebsocketBuilder, WebsocketEvent } from 'websocket-ts';
+import { SCANDATA_MOCK, SocketMessageType } from './data.model';
+
+const ws = new WebsocketBuilder('ws://localhost:8765').build();
 
 const enum ROBOT {
     PICCOLO = 'piccolo',
@@ -194,6 +197,17 @@ function drawLidarData(scene: Scene, scandata: number[]): void {
     drawLineLidar(scene, 4, angle + POINT_ANGLE * TOT_DEADZONE, COLOR.RED);
 }
 
+export function handleMessage(message: MessageEvent, scene: Scene): void {
+    const m = JSON.parse(message.data);
+    switch (m.type) {
+        case SocketMessageType.LIDAR:
+            drawLidarData(scene, m.data);
+            break;
+        default:
+            break;
+    }
+}
+
 function main(): void {
     const renderer = new WebGLRenderer({ antialias: true });
     renderer.setSize(1500, 1000);
@@ -221,6 +235,10 @@ function main(): void {
     drawFrontToF(scene, 4, 3);
 
     drawLidarData(scene, SCANDATA_MOCK);
+
+    ws.addEventListener(WebsocketEvent.message, (_: Websocket, message: MessageEvent) => {
+        handleMessage(message, scene);
+    });
 
     // simulate dynamic data
     // setTimeout(() => {
