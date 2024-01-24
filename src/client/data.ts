@@ -1,6 +1,9 @@
-import { Group, Mesh, Object3DEventMap } from 'three';
+// ROBOT dimensions 300x300x350 mediamente (h x w x l)
+const ROBOT_HEIGHT = 300;
+const ROBOT_WIDTH = 300;
+const ROBOT_LENGTH = 350;
 
-export const SCANDATA_MOCK = [
+export const LIDAR_SCANDATA_MOCK = [
     2313, 2327, 2327, 2327, 2330, 2466, 2548, 2552, 2552, 2552, 2582, 2599, 2625, 2635, 2658, 2681,
     2681, 2681, 2684, 2684, 2704, 2827, 7, 0, 0, 0, 0, 0, 1487, 1474, 1464, 1463, 1463, 1464, 1473,
     1488, 1515, 1522, 1525, 1528, 1528, 1529, 1530, 1537, 1540, 1540, 1540, 1542, 1535, 1517, 416,
@@ -40,7 +43,7 @@ export const SCANDATA_MOCK = [
     4100, 4100, 4100, 4213, 4481, 4597,
 ];
 
-export const SCANDATA_MOCK_2 = [
+export const LIDAR_SCANDATA_MOCK_2 = [
     2307, 2312, 2330, 2348, 7, 2458, 2458, 2545, 2545, 2550, 2580, 2591, 2613, 2646, 2650, 2650,
     2650, 1563, 1550, 1550, 1545, 1544, 1541, 1540, 1524, 1523, 1518, 1509, 1502, 1502, 1502, 0, 0,
     15, 7, 0, 15, 7, 0, 7, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 417, 413, 409, 405, 405, 405, 409, 412, 0,
@@ -79,17 +82,3 @@ export const SCANDATA_MOCK_2 = [
     3697, 3668, 3668, 3668, 3680, 3685, 3691, 3691, 3691, 3708, 3722, 3750, 3819, 0, 0, 0, 4105,
     4105, 4105, 4174, 4457, 4588,
 ];
-
-export const enum SocketMessageType {
-    LIDAR = 'lidar',
-}
-
-export interface LidarPoint {
-    length: number;
-    angle: number;
-}
-
-export interface LidarLines {
-    group: Group<Object3DEventMap>;
-    mesh: Mesh;
-}

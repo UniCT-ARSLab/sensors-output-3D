@@ -1,123 +1,23 @@
-import {
-    BoxGeometry,
-    Color,
-    ColorRepresentation,
-    DirectionalLight,
-    DoubleSide,
-    Group,
-    HemisphereLight,
-    Material,
-    Mesh,
-    MeshPhongMaterial,
-    MeshStandardMaterial,
-    NearestFilter,
-    PerspectiveCamera,
-    PlaneGeometry,
-    RepeatWrapping,
-    SRGBColorSpace,
-    Scene,
-    TextureLoader,
-    WebGLRenderer,
-} from 'three';
+import { Color, Group, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
 import { Websocket, WebsocketBuilder, WebsocketEvent } from 'websocket-ts';
-import { LidarLines, LidarPoint, SCANDATA_MOCK, SocketMessageType } from './data.model';
+import { LIDAR_SCANDATA_MOCK } from './data';
+import {
+    addLight,
+    disposeMesh,
+    drawToF,
+    getLineMesh,
+    initMap,
+    initRobot,
+    resizeRendererToDisplaySize,
+} from './helper';
+import { COLOR, LidarLines, LidarPoint, ROBOT, SocketMessageType, TOF } from './model';
 
 const ws = new WebsocketBuilder('ws://localhost:8765').build();
 
-const enum ROBOT {
-    PICCOLO = 'piccolo',
-    GRANDE = 'grande',
-}
-
-const enum COLOR {
-    GREEN = 0x00ff00,
-    RED = 0xff0000,
-    YELLOW = 0xffff00,
-}
-
-// ROBOT dimensions 300x300x350 mediamente (h x w x l)
-const ROBOT_HEIGHT = 300;
-const ROBOT_WIDTH = 300;
-const ROBOT_LENGTH = 350;
-
-const LINEWIDTH = 0.05;
 let angle = 0;
 const lidarLines: LidarLines[] = [];
-
-let mesh_back_tof1: Mesh;
-let mesh_back_tof2: Mesh;
-let mesh_front_tof1: Mesh;
-let mesh_front_tof2: Mesh;
-
-function initMap(scene: Scene): void {
-    const loader = new TextureLoader();
-    const texture = loader.load('assets/2024.png');
-    texture.colorSpace = SRGBColorSpace;
-    texture.wrapS = RepeatWrapping;
-    texture.wrapT = RepeatWrapping;
-    texture.magFilter = NearestFilter;
-
-    // 30 units = 3000 mm, 20 units = 2000 mm
-    const planeGeo = new PlaneGeometry(30, 20);
-
-    const planeMat = new MeshPhongMaterial({
-        map: texture,
-        side: DoubleSide,
-    });
-    const mesh = new Mesh(planeGeo, planeMat);
-    mesh.rotation.x = Math.PI * -0.5;
-    scene.add(mesh);
-}
-
-function addLight(scene: Scene): void {
-    {
-        const skyColor = 0xb1e1ff; // light blue
-        const groundColor = 0xb97a20; // brownish orange
-        const intensity = 3;
-        const light = new HemisphereLight(skyColor, groundColor, intensity);
-        scene.add(light);
-    }
-
-    {
-        const color = 0xffffff;
-        const intensity = 3;
-        const light = new DirectionalLight(color, intensity);
-        light.position.set(5, 10, 2);
-        scene.add(light);
-        scene.add(light.target);
-    }
-}
-
-function initRobot(scene: Scene, type: ROBOT = ROBOT.GRANDE): void {
-    const mtlLoader = new MTLLoader();
-    mtlLoader.load(`assets/robot-${type}.mtl`, (mtl) => {
-        mtl.preload();
-        const objLoader = new OBJLoader();
-        objLoader.setMaterials(mtl);
-        objLoader.load(`assets/robot-${type}.obj`, (obj) => {
-            // from the origin dimensions set them /100
-            // obj.scale.set(0.01, 0.01, 0.01);
-            obj.scale.setScalar(0.01);
-
-            if (type == ROBOT.GRANDE) {
-                obj.rotateX(degToRad(90));
-                obj.position.y = 3.3;
-            }
-            scene.add(obj);
-        });
-    });
-}
-
-function getLineMesh(length: number, color: ColorRepresentation): Mesh {
-    const material = new MeshStandardMaterial({ color });
-    const geometry = new BoxGeometry(LINEWIDTH, LINEWIDTH, length);
-    const mesh = new Mesh(geometry, material);
-    return mesh;
-}
 
 function drawLineLidar(scene: Scene, lidarPoints: LidarPoint[], color = COLOR.YELLOW): void {
     for (const lidarPoint of lidarPoints) {
@@ -135,43 +35,10 @@ function drawLineLidar(scene: Scene, lidarPoints: LidarPoint[], color = COLOR.YE
     }
 }
 
-function drawBackToF(scene: Scene, tof1: number, tof2: number): void {
-    if (mesh_back_tof1) {
-        scene.remove(mesh_back_tof1);
-    }
-    mesh_back_tof1 = getLineMesh(tof1, COLOR.RED);
-    mesh_back_tof1.position.set(0.75, 0, 1.7 + tof1 / 2);
-    scene.add(mesh_back_tof1);
-
-    if (mesh_back_tof2) {
-        scene.remove(mesh_back_tof2);
-    }
-    mesh_back_tof2 = getLineMesh(tof2, COLOR.RED);
-    mesh_back_tof2.position.set(-1.1, 0, 1.7 + tof2 / 2);
-    scene.add(mesh_back_tof2);
-}
-
-function drawFrontToF(scene: Scene, tof1: number, tof2: number): void {
-    if (mesh_front_tof1) {
-        scene.remove(mesh_front_tof1);
-    }
-    mesh_front_tof1 = getLineMesh(tof1, COLOR.GREEN);
-    mesh_front_tof1.position.set(0.75, 0, -1 - tof1 / 2);
-    scene.add(mesh_front_tof1);
-
-    if (mesh_front_tof2) {
-        scene.remove(mesh_front_tof2);
-    }
-    mesh_front_tof2 = getLineMesh(tof2, COLOR.GREEN);
-    mesh_front_tof2.position.set(-1.1, 0, -1 - tof2 / 2);
-    scene.add(mesh_front_tof2);
-}
-
 function emptyLidar(scene: Scene): void {
     for (const l of lidarLines) {
         scene.remove(l.group);
-        l.mesh.geometry.dispose();
-        (l.mesh.material as Material).dispose();
+        disposeMesh(l.mesh);
     }
     lidarLines.length = 0;
 }
@@ -239,10 +106,17 @@ function main(): void {
     addLight(scene);
     initRobot(scene, ROBOT.GRANDE);
 
-    drawBackToF(scene, 7, 5);
-    drawFrontToF(scene, 4, 3);
+    drawToF(scene, TOF.back_1, 7, COLOR.RED);
+    drawToF(scene, TOF.back_2, 5, COLOR.RED);
+    drawToF(scene, TOF.back_3, 7, COLOR.RED);
+    drawToF(scene, TOF.back_4, 5, COLOR.RED);
 
-    drawLidarData(scene, SCANDATA_MOCK);
+    drawToF(scene, TOF.front_1, 4, COLOR.GREEN);
+    drawToF(scene, TOF.front_2, 3, COLOR.GREEN);
+    drawToF(scene, TOF.front_3, 3, COLOR.GREEN);
+    drawToF(scene, TOF.front_4, 3, COLOR.GREEN);
+
+    drawLidarData(scene, LIDAR_SCANDATA_MOCK);
 
     ws.addEventListener(WebsocketEvent.message, (_: Websocket, message: MessageEvent) => {
         handleMessage(message, scene);
@@ -255,24 +129,12 @@ function main(): void {
     // }, 5_000);
 
     // setTimeout(() => {
-    //     drawLidarData(scene, SCANDATA_MOCK_2);
+    //     drawLidarData(scene, LIDAR_SCANDATA_MOCK_2);
     // }, 5_000);
 
     // setTimeout(() => {
-    //     drawLidarData(scene, SCANDATA_MOCK);
+    //     drawLidarData(scene, LIDAR_SCANDATA_MOCK);
     // }, 10_000);
-
-    function resizeRendererToDisplaySize(renderer: WebGLRenderer): boolean {
-        const canvas = renderer.domElement;
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        const needResize = canvas.width !== width || canvas.height !== height;
-        if (needResize) {
-            renderer.setSize(width, height, false);
-        }
-
-        return needResize;
-    }
 
     function render(): void {
         if (resizeRendererToDisplaySize(renderer)) {
