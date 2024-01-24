@@ -1,3 +1,5 @@
+import { Group, Mesh, Object3DEventMap } from 'three';
+
 export const SCANDATA_MOCK = [
     2313, 2327, 2327, 2327, 2330, 2466, 2548, 2552, 2552, 2552, 2582, 2599, 2625, 2635, 2658, 2681,
     2681, 2681, 2684, 2684, 2704, 2827, 7, 0, 0, 0, 0, 0, 1487, 1474, 1464, 1463, 1463, 1464, 1473,
@@ -80,4 +82,14 @@ export const SCANDATA_MOCK_2 = [
 
 export const enum SocketMessageType {
     LIDAR = 'lidar',
+}
+
+export interface LidarPoint {
+    length: number;
+    angle: number;
+}
+
+export interface LidarLines {
+    group: Group<Object3DEventMap>;
+    mesh: Mesh;
 }

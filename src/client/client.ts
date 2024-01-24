@@ -6,11 +6,11 @@ import {
     DoubleSide,
     Group,
     HemisphereLight,
+    Material,
     Mesh,
     MeshPhongMaterial,
     MeshStandardMaterial,
     NearestFilter,
-    Object3DEventMap,
     PerspectiveCamera,
     PlaneGeometry,
     RepeatWrapping,
@@ -24,7 +24,7 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
 import { Websocket, WebsocketBuilder, WebsocketEvent } from 'websocket-ts';
-import { SCANDATA_MOCK, SocketMessageType } from './data.model';
+import { LidarLines, LidarPoint, SCANDATA_MOCK, SocketMessageType } from './data.model';
 
 const ws = new WebsocketBuilder('ws://localhost:8765').build();
 
@@ -46,7 +46,7 @@ const ROBOT_LENGTH = 350;
 
 const LINEWIDTH = 0.05;
 let angle = 0;
-const lidarLines: Group<Object3DEventMap>[] = [];
+const lidarLines: LidarLines[] = [];
 
 let mesh_back_tof1: Mesh;
 let mesh_back_tof2: Mesh;
@@ -119,24 +119,20 @@ function getLineMesh(length: number, color: ColorRepresentation): Mesh {
     return mesh;
 }
 
-function drawLineLidar(
-    scene: Scene,
-    length: number,
-    anglePoint: number,
-    color = COLOR.YELLOW
-): void {
-    const mesh = getLineMesh(length, color);
+function drawLineLidar(scene: Scene, lidarPoints: LidarPoint[], color = COLOR.YELLOW): void {
+    for (const lidarPoint of lidarPoints) {
+        const mesh = getLineMesh(lidarPoint.length, color);
+        mesh.position.set(0, 5, 0 + lidarPoint.length / 2);
 
-    // hack to rotate properly the object
-    const group = new Group();
-    group.add(mesh);
-    mesh.position.set(0, 0, 0);
-    group.rotation.y = degToRad(anglePoint);
+        // hack to rotate properly the object
+        const group = new Group();
+        group.add(mesh);
+        group.rotation.y = degToRad(lidarPoint.angle);
 
-    mesh.position.set(0, 5, 0 + length / 2);
+        lidarLines.push({ group, mesh });
 
-    lidarLines.push(group);
-    scene.add(group);
+        scene.add(group);
+    }
 }
 
 function drawBackToF(scene: Scene, tof1: number, tof2: number): void {
@@ -173,7 +169,9 @@ function drawFrontToF(scene: Scene, tof1: number, tof2: number): void {
 
 function emptyLidar(scene: Scene): void {
     for (const l of lidarLines) {
-        scene.remove(l);
+        scene.remove(l.group);
+        l.mesh.geometry.dispose();
+        (l.mesh.material as Material).dispose();
     }
     lidarLines.length = 0;
 }
@@ -181,20 +179,30 @@ function emptyLidar(scene: Scene): void {
 function drawLidarData(scene: Scene, scandata: number[]): void {
     emptyLidar(scene);
 
+    const lidarPoints: LidarPoint[] = [];
+
     const TOT_DEADZONE = 1024 - 725 + 44;
 
     const POINT_ANGLE = 360 / 1024;
     const LEFT_START_ANGLE = -(TOT_DEADZONE / 2) * POINT_ANGLE;
     angle = LEFT_START_ANGLE;
     for (const i of scandata) {
-        drawLineLidar(scene, i / 1000, angle);
+        const length = i / 1000;
+
+        lidarPoints.push({ length, angle });
+
         angle -= POINT_ANGLE;
     }
     angle = LEFT_START_ANGLE;
 
+    drawLineLidar(scene, lidarPoints);
+
     // draw dead zone borders
-    drawLineLidar(scene, 4, angle + POINT_ANGLE, COLOR.RED);
-    drawLineLidar(scene, 4, angle + POINT_ANGLE * TOT_DEADZONE, COLOR.RED);
+    const deadZonePoints = [
+        { length: 5, angle: angle + POINT_ANGLE * 2 },
+        { length: 5, angle: angle + POINT_ANGLE * TOT_DEADZONE },
+    ];
+    drawLineLidar(scene, deadZonePoints, COLOR.RED);
 }
 
 export function handleMessage(message: MessageEvent, scene: Scene): void {
