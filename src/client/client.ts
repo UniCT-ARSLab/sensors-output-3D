@@ -2,7 +2,7 @@ import { Color, Group, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { degToRad } from 'three/src/math/MathUtils';
 import { Websocket, WebsocketBuilder, WebsocketEvent } from 'websocket-ts';
-import { LIDAR_SCANDATA_MOCK } from './data';
+import { LEFT_START_ANGLE, LIDAR_SCANDATA_MOCK, LIDAR_TOT_DEADZONE, POINT_ANGLE } from './data';
 import {
     addLight,
     disposeMesh,
@@ -46,20 +46,15 @@ function emptyLidar(scene: Scene): void {
 function drawLidarData(scene: Scene, scandata: number[]): void {
     emptyLidar(scene);
 
-    const lidarPoints: LidarPoint[] = [];
-
-    const TOT_DEADZONE = 1024 - 725 + 44;
-
-    const POINT_ANGLE = 360 / 1024;
-    const LEFT_START_ANGLE = -(TOT_DEADZONE / 2) * POINT_ANGLE;
     angle = LEFT_START_ANGLE;
-    for (const i of scandata) {
-        const length = i / 1000;
 
-        lidarPoints.push({ length, angle });
-
+    const lidarPoints: LidarPoint[] = scandata.map((s) => {
+        const length = s / 1000;
         angle -= POINT_ANGLE;
-    }
+
+        return { length, angle };
+    });
+
     angle = LEFT_START_ANGLE;
 
     drawLineLidar(scene, lidarPoints);
@@ -67,7 +62,7 @@ function drawLidarData(scene: Scene, scandata: number[]): void {
     // draw dead zone borders
     const deadZonePoints = [
         { length: 5, angle: angle + POINT_ANGLE * 2 },
-        { length: 5, angle: angle + POINT_ANGLE * TOT_DEADZONE },
+        { length: 5, angle: angle + POINT_ANGLE * LIDAR_TOT_DEADZONE - 1 },
     ];
     drawLineLidar(scene, deadZonePoints, COLOR.RED);
 }
