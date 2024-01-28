@@ -4,6 +4,7 @@ import {
     DirectionalLight,
     DoubleSide,
     HemisphereLight,
+    Material,
     Mesh,
     MeshPhongMaterial,
     MeshStandardMaterial,
@@ -19,10 +20,7 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
 import { COLOR, ROBOT, TOF } from './model';
-import { LINEWIDTH, ToF_OBJECT } from './settings';
-
-import { Material } from 'three';
-import { MAP_SRC } from './settings';
+import { LINEWIDTH, MAP_SRC, ToF_OBJECT } from './settings';
 
 export function resizeRendererToDisplaySize(renderer: WebGLRenderer): boolean {
     const canvas = renderer.domElement;

@@ -26,7 +26,6 @@ import { COLOR, LidarLines, LidarPoint, ROBOT, SocketMessageType, TOF } from './
 
 const ws = new WebsocketBuilder('ws://localhost:8765').build();
 
-let angle = 0;
 const lidarLines: LidarLines[] = [];
 
 function drawLineLidar(
@@ -62,7 +61,7 @@ function emptyLidar(scene: Scene): void {
 
 function drawLidarData(scene: Scene, scandata: number[]): void {
     emptyLidar(scene);
-    angle = LEFT_START_ANGLE;
+    let angle = LEFT_START_ANGLE;
     const lidarPoints: LidarPoint[] = scandata.map((s) => {
         const length = s / 1000;
         angle -= POINT_ANGLE;
