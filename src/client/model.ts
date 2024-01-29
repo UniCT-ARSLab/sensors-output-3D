@@ -2,6 +2,7 @@ import { Group, Mesh, Object3DEventMap } from 'three';
 
 export const enum SocketMessageType {
     LIDAR = 'lidar',
+    POSITION = 'position',
 }
 
 export interface LidarPoint {
@@ -34,4 +35,10 @@ export const enum TOF {
     back_2,
     back_3,
     back_4,
+}
+
+export interface Position {
+    X: number;
+    Y: number;
+    Angle: number;
 }

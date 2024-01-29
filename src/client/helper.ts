@@ -130,13 +130,20 @@ export function getToF(scene: Scene, tofType: TOF, tofValue: number, color: COLO
 
 export function moveRobot(robotGrp: Group, X: number, Y: number): void {
     if (robotGrp) {
-        robotGrp.position.x = X;
-        robotGrp.position.z = -Y;
+        const { x, z } = robotGrp.position;
+        if (x && x !== X) {
+            robotGrp.position.x = X;
+        }
+
+        if (z && z !== -Y) {
+            robotGrp.position.z = -Y;
+        }
     }
 }
 
 export function rotateRobot(robotGrp: Group, angle: number): void {
-    if (robotGrp) {
+    console.log('ROTATE angle', angle);
+    if (robotGrp && angle && robotGrp.rotation.y !== degToRad(angle)) {
         robotGrp.rotation.y = degToRad(angle);
     }
 }
