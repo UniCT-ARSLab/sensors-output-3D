@@ -1,7 +1,7 @@
 // ROBOT dimensions 300x300x350 mediamente (h x w x l)
-const ROBOT_HEIGHT = 300;
-const ROBOT_WIDTH = 300;
-const ROBOT_LENGTH = 350;
+// export const ROBOT_HEIGHT = 300;
+// export const ROBOT_WIDTH = 300;
+export const ROBOT_LENGTH = 350 / 100;
 
 export const LIDAR_TOT_DEADZONE = 1024 - 725 + 44;
 export const POINT_ANGLE = 360 / 1024;

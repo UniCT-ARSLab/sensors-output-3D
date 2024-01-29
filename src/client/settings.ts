@@ -1,6 +1,13 @@
 import { Mesh } from 'three';
 import { TOF } from './model';
 
+// 30 units = 3000 mm, 20 units = 2000 mm
+export const MAP_X = 30;
+export const MAP_Y = 20;
+
+export const PLATFORM_WIDTH = 1000;
+export const PLATFORM_HEIGHT = 800;
+
 export const LINEWIDTH = 0.05;
 
 export const ToF_OBJECT: Record<

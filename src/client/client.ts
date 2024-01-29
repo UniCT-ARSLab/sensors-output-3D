@@ -12,24 +12,32 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { degToRad } from 'three/src/math/MathUtils';
 import { Websocket, WebsocketBuilder, WebsocketEvent } from 'websocket-ts';
-import { LEFT_START_ANGLE, LIDAR_SCANDATA_MOCK, LIDAR_TOT_DEADZONE, POINT_ANGLE } from './data';
+import {
+    LEFT_START_ANGLE,
+    LIDAR_SCANDATA_MOCK,
+    LIDAR_TOT_DEADZONE,
+    POINT_ANGLE,
+    ROBOT_LENGTH,
+} from './data';
 import {
     addLight,
     disposeMesh,
-    drawToF,
     getLineMesh,
+    getToF,
     initMap,
     initRobot,
     resizeRendererToDisplaySize,
 } from './helper';
 import { COLOR, LidarLines, LidarPoint, ROBOT, SocketMessageType, TOF } from './model';
+import { PLATFORM_HEIGHT, PLATFORM_WIDTH } from './settings';
 
 const ws = new WebsocketBuilder('ws://localhost:8765').build();
 
 const lidarLines: LidarLines[] = [];
+const robotGroup = new Group();
 
 function drawLineLidar(
-    scene: Scene,
+    robotGrp: Group,
     lidarPoints: LidarPoint[],
     color = COLOR.YELLOW,
     saveLine = true
@@ -47,20 +55,20 @@ function drawLineLidar(
             lidarLines.push({ group, mesh });
         }
 
-        scene.add(group);
+        robotGrp.add(group);
     }
 }
 
-function emptyLidar(scene: Scene): void {
+function emptyLidar(robotGrp: Group): void {
     for (const l of lidarLines) {
-        scene.remove(l.group);
+        robotGrp.remove(l.group);
         disposeMesh(l.mesh);
     }
     lidarLines.length = 0;
 }
 
-function drawLidarData(scene: Scene, scandata: number[]): void {
-    emptyLidar(scene);
+function drawLidarData(robotGrp: Group, scandata: number[]): void {
+    emptyLidar(robotGrp);
     let angle = LEFT_START_ANGLE;
     const lidarPoints: LidarPoint[] = scandata.map((s) => {
         const length = s / 1000;
@@ -68,10 +76,10 @@ function drawLidarData(scene: Scene, scandata: number[]): void {
         return { length, angle };
     });
     angle = LEFT_START_ANGLE;
-    drawLineLidar(scene, lidarPoints);
+    drawLineLidar(robotGrp, lidarPoints);
 }
 
-function drawLidarBorder(scene: Scene): void {
+function drawLidarBorder(robotGrp: Group): void {
     const geometry = new BufferGeometry().setFromPoints(
         new Path().absarc(0, 0, 5, 0, Math.PI * 2).getSpacedPoints(50)
     );
@@ -79,21 +87,21 @@ function drawLidarBorder(scene: Scene): void {
     const line = new Line(geometry, material);
     line.position.set(0, 5, 0);
     line.rotateX(degToRad(90));
-    scene.add(line);
+    robotGrp.add(line);
 
     // draw dead zone borders
     const deadZonePoints = [
         { length: 5, angle: LEFT_START_ANGLE + POINT_ANGLE * 2 },
         { length: 5, angle: LEFT_START_ANGLE + POINT_ANGLE * LIDAR_TOT_DEADZONE - 1 },
     ];
-    drawLineLidar(scene, deadZonePoints, COLOR.RED, false);
+    drawLineLidar(robotGrp, deadZonePoints, COLOR.RED, false);
 }
 
 export function handleMessage(message: MessageEvent, scene: Scene): void {
     const m = JSON.parse(message.data);
     switch (m.type) {
         case SocketMessageType.LIDAR:
-            drawLidarData(scene, m.data);
+            drawLidarData(robotGroup, m.data);
             break;
         default:
             break;
@@ -102,7 +110,7 @@ export function handleMessage(message: MessageEvent, scene: Scene): void {
 
 function main(): void {
     const renderer = new WebGLRenderer({ antialias: true });
-    renderer.setSize(1500, 1000);
+    renderer.setSize(PLATFORM_WIDTH, PLATFORM_HEIGHT);
     const canvas = document.body.appendChild(renderer.domElement);
 
     const fov = 45;
@@ -121,20 +129,36 @@ function main(): void {
 
     initMap(scene);
     addLight(scene);
-    initRobot(scene, ROBOT.GRANDE);
 
-    drawToF(scene, TOF.back_1, 7, COLOR.RED);
-    drawToF(scene, TOF.back_2, 5, COLOR.RED);
-    drawToF(scene, TOF.back_3, 7, COLOR.RED);
-    drawToF(scene, TOF.back_4, 5, COLOR.RED);
+    initRobot(scene, ROBOT.GRANDE).then((robot) => {
+        const ToFs = [];
 
-    drawToF(scene, TOF.front_1, 4, COLOR.GREEN);
-    drawToF(scene, TOF.front_2, 3, COLOR.GREEN);
-    drawToF(scene, TOF.front_3, 3, COLOR.GREEN);
-    drawToF(scene, TOF.front_4, 3, COLOR.GREEN);
+        ToFs.push(getToF(scene, TOF.back_1, 7, COLOR.RED));
+        ToFs.push(getToF(scene, TOF.back_2, 5, COLOR.RED));
+        ToFs.push(getToF(scene, TOF.back_3, 7, COLOR.RED));
+        ToFs.push(getToF(scene, TOF.back_4, 5, COLOR.RED));
 
-    drawLidarBorder(scene);
-    drawLidarData(scene, LIDAR_SCANDATA_MOCK);
+        ToFs.push(getToF(scene, TOF.front_1, 4, COLOR.GREEN));
+        ToFs.push(getToF(scene, TOF.front_2, 3, COLOR.GREEN));
+        ToFs.push(getToF(scene, TOF.front_3, 3, COLOR.GREEN));
+        ToFs.push(getToF(scene, TOF.front_4, 3, COLOR.GREEN));
+
+        drawLidarBorder(robotGroup);
+        drawLidarData(robotGroup, LIDAR_SCANDATA_MOCK);
+
+        robotGroup.add(robot);
+        robotGroup.add(...ToFs);
+
+        robotGroup.position.x += ROBOT_LENGTH / 2;
+        robotGroup.position.z += -(ROBOT_LENGTH / 2);
+
+        scene.add(robotGroup);
+    });
+
+    // setTimeout(() => {
+    //     moveRobot(robotGroup, 6, 3);
+    //     rotateRobot(robotGroup, -90);
+    // }, 4_000);
 
     ws.addEventListener(WebsocketEvent.message, (_: Websocket, message: MessageEvent) => {
         handleMessage(message, scene);
@@ -142,16 +166,10 @@ function main(): void {
 
     // simulate dynamic data
     // setTimeout(() => {
-    //     drawBackToF(scene, 2, 3);
-    //     drawFrontToF(scene, 8, 7);
+    //     drawLidarData(robotGroup, LIDAR_SCANDATA_MOCK_FULL);
     // }, 5_000);
-
     // setTimeout(() => {
-    //     drawLidarData(scene, LIDAR_SCANDATA_MOCK_2);
-    // }, 5_000);
-
-    // setTimeout(() => {
-    //     drawLidarData(scene, LIDAR_SCANDATA_MOCK);
+    //     drawLidarData(robotGroup, LIDAR_SCANDATA_MOCK_2);
     // }, 10_000);
 
     function render(): void {
