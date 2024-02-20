@@ -30,7 +30,7 @@ import {
     resizeRendererToDisplaySize,
     rotateRobot,
 } from './helper';
-import { COLOR, LidarLines, LidarPoint, Position, ROBOT, SocketMessageType, TOF } from './model';
+import { COLOR, LidarLines, LidarPoint, ROBOT, RobotData, SocketMessageType, TOF } from './model';
 import { PLATFORM_HEIGHT, PLATFORM_WIDTH } from './settings';
 
 const ws = new WebsocketBuilder('ws://localhost:8765').build();
@@ -105,10 +105,12 @@ export function handleMessage(message: MessageEvent, scene: Scene): void {
         case SocketMessageType.LIDAR:
             drawLidarData(robotGroup, m.data);
             break;
-        case SocketMessageType.POSITION:
-            const { X, Y, Angle } = m.data as Position;
-            moveRobot(robotGroup, X / 100, Y / 100);
-            rotateRobot(robotGroup, Angle);
+        case SocketMessageType.ROBOT_DATA:
+            {
+                const { X, Y, Angle } = m.data as RobotData;
+                moveRobot(robotGroup, X / 100, Y / 100);
+                rotateRobot(robotGroup, Angle);
+            }
             break;
         default:
             break;

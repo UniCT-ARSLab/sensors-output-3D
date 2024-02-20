@@ -2,7 +2,7 @@ import { Group, Mesh, Object3DEventMap } from 'three';
 
 export const enum SocketMessageType {
     LIDAR = 'lidar',
-    POSITION = 'position',
+    ROBOT_DATA = 'robot_data',
 }
 
 export interface LidarPoint {
@@ -41,4 +41,20 @@ export interface Position {
     X: number;
     Y: number;
     Angle: number;
+    Flags: number;
+    Bumpers: number;
+}
+
+interface RobotStatus {
+    robot_selected: number;
+    status_display: number;
+}
+interface DistanceSensor {
+    sensor: number;
+    distance: number;
+    alarm: number;
+}
+
+export interface RobotData extends Position, RobotStatus, DistanceSensor {
+    linear_speed: number;
 }

@@ -142,7 +142,6 @@ export function moveRobot(robotGrp: Group, X: number, Y: number): void {
 }
 
 export function rotateRobot(robotGrp: Group, angle: number): void {
-    console.log('ROTATE angle', angle);
     if (robotGrp && angle && robotGrp.rotation.y !== degToRad(angle)) {
         robotGrp.rotation.y = degToRad(angle);
     }
