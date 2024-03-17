@@ -19,6 +19,7 @@ import {
     POINT_ANGLE,
     ROBOT_LENGTH,
 } from './data';
+import { add_align_button } from './dom';
 import {
     addLight,
     disposeMesh,
@@ -34,17 +35,9 @@ import { COLOR, LidarLines, LidarPoint, ROBOT, RobotData, SocketMessageType, TOF
 import { PLATFORM_HEIGHT, PLATFORM_WIDTH } from './settings';
 
 const ws = new WebsocketBuilder('ws://localhost:8765').build();
-let interval: NodeJS.Timeout;
 
 const lidarLines: LidarLines[] = [];
 const robotGroup = new Group();
-
-function pingWs() {
-    console.log('ASD ping');
-    interval = setInterval(() => {
-        ws.send('ping');
-    }, 1_000);
-}
 
 function drawLineLidar(
     robotGrp: Group,
@@ -181,8 +174,6 @@ function main(): void {
         handleMessage(message, scene);
     });
 
-    pingWs();
-
     // simulate dynamic data
     // setTimeout(() => {
     //     drawLidarData(robotGroup, LIDAR_SCANDATA_MOCK_FULL);
@@ -206,19 +197,6 @@ function main(): void {
     requestAnimationFrame(render);
 }
 
-const alignBtn = document.createElement('button');
-alignBtn.innerHTML = 'Send align';
-alignBtn.id = 'btn-align';
-alignBtn.onclick = function () {
-    clearInterval(interval);
-    ws.send('ALIGN');
-    const btn = document.querySelector<HTMLElement>('#btn-align');
-    (btn as any).disabled = true;
-    setTimeout(() => {
-        (btn as any).disabled = false;
-        pingWs();
-    }, 5_000);
-};
-document.body.appendChild(alignBtn);
+add_align_button(ws);
 
 main();
