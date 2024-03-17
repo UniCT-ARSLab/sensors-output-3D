@@ -19,6 +19,7 @@ import {
     POINT_ANGLE,
     ROBOT_LENGTH,
 } from './data';
+import { add_align_button } from './dom';
 import {
     addLight,
     disposeMesh,
@@ -195,5 +196,7 @@ function main(): void {
 
     requestAnimationFrame(render);
 }
+
+add_align_button(ws);
 
 main();
