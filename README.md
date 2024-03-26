@@ -1,5 +1,7 @@
 # Sensors output
 
+![frontend](frontend3D.png)
+
 ### requirements
 
 -   install Nodejs
