@@ -1,5 +1,5 @@
 import { Mesh } from 'three';
-import { TOF } from './model';
+import { TOF } from './models/model';
 
 // 30 units = 3000 mm, 20 units = 2000 mm
 export const MAP_X = 30;

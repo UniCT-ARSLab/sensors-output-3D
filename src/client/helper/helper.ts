@@ -21,8 +21,8 @@ import {
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
-import { COLOR, ROBOT, TOF } from './model';
-import { LINEWIDTH, MAP_SRC, MAP_X, MAP_Y, ToF_OBJECT } from './settings';
+import { COLOR, ROBOT, TOF } from '../models/model';
+import { LINEWIDTH, MAP_SRC, MAP_X, MAP_Y, ToF_OBJECT } from '../settings';
 
 export function resizeRendererToDisplaySize(renderer: WebGLRenderer): boolean {
     const canvas = renderer.domElement;

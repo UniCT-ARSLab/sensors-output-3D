@@ -1,8 +1,10 @@
 import { Group, Mesh, Object3DEventMap } from 'three';
 
 export const enum SocketMessageType {
-    LIDAR = 'lidar',
-    ROBOT_DATA = 'robot_data',
+    NEW_CAN_PACKET = 'NEW_CAN_PACKET',
+    ROBOT_DATA = 'ROBOT_DATA',
+    LIDAR_DATA = 'LIDAR_DATA',
+    SEND_ALIGN = 'SEND_ALIGN',
 }
 
 export interface LidarPoint {
@@ -10,7 +12,7 @@ export interface LidarPoint {
     angle: number;
 }
 
-export interface LidarLines {
+export interface LidarLine {
     group: Group<Object3DEventMap>;
     mesh: Mesh;
 }
