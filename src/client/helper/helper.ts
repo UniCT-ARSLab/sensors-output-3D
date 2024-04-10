@@ -24,6 +24,12 @@ import { degToRad } from 'three/src/math/MathUtils';
 import { COLOR, ROBOT, TOF } from '../models/model';
 import { LINEWIDTH, MAP_SRC, MAP_X, MAP_Y, ToF_OBJECT } from '../settings';
 
+export interface RenderRobot {
+    robot: Group<Object3DEventMap>;
+    isLidar: boolean;
+    isToF: boolean;
+}
+
 export function resizeRendererToDisplaySize(renderer: WebGLRenderer): boolean {
     const canvas = renderer.domElement;
     const width = canvas.clientWidth;
@@ -81,28 +87,30 @@ export function addLight(scene: Scene): void {
     }
 }
 
-export async function initRobot(
+export async function renderRobot(
     scene: Scene,
-    type: ROBOT = ROBOT.GRANDE
-): Promise<Group<Object3DEventMap>> {
-    return new Promise<Group<Object3DEventMap>>((resolve) => {
+    type: ROBOT = ROBOT.GRANDE,
+    isLidar = false,
+    isToF = false
+): Promise<RenderRobot> {
+    return new Promise<RenderRobot>((resolve) => {
         const mtlLoader = new MTLLoader();
         mtlLoader.load(`assets/robot-${type}.mtl`, (mtl) => {
             mtl.preload();
             const objLoader = new OBJLoader();
             objLoader.setMaterials(mtl);
-            objLoader.load(`assets/robot-${type}.obj`, (obj) => {
+            objLoader.load(`assets/robot-${type}.obj`, (robot) => {
                 // from the origin dimensions set them /100
-                // obj.scale.set(0.01, 0.01, 0.01);
-                obj.scale.setScalar(0.01);
+                // robot.scale.set(0.01, 0.01, 0.01);
+                robot.scale.setScalar(0.01);
 
                 if (type == ROBOT.GRANDE) {
-                    obj.rotateX(degToRad(90));
-                    obj.position.y = 3.3;
+                    robot.rotateX(degToRad(90));
+                    robot.position.y = 3.3;
                 }
-                scene.add(obj);
+                scene.add(robot);
 
-                resolve(obj);
+                resolve({ robot, isLidar, isToF });
             });
         });
     });
