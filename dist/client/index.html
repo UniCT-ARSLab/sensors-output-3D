@@ -12,6 +12,22 @@
     </head>
 
     <body>
+        <div>
+            <label> <input type="checkbox" id="btn-option3d" checked="false" /> Enable 3D </label>
+            <br />
+            <label>
+                <input type="checkbox" id="btn-option-tof" checked="false" /> Enable ToF
+            </label>
+            <br />
+            <label>
+                <input type="checkbox" id="btn-option-lidar" checked="false" /> Enable LiDAR
+            </label>
+            <br />
+            <button id="btn-align">Send align</button>
+        </div>
+
+        <div id="container-3d"></div>
+
         <script type="module" src="bundle.js"></script>
     </body>
 </html>

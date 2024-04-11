@@ -1,7 +1,14 @@
 import { Color, Group, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { add_align_button } from './helper/dom';
-import { addLight, getToF, initMap, initRobot, resizeRendererToDisplaySize } from './helper/helper';
+import { add_align_button, add_option_3d } from './helper/dom';
+import {
+    RenderRobot,
+    addLight,
+    getToF,
+    initMap,
+    renderRobot,
+    resizeRendererToDisplaySize,
+} from './helper/helper';
 import { drawLidarBorder, drawLidarData } from './helper/lidar_functions';
 import { LIDAR_SCANDATA_MOCK, ROBOT_LENGTH } from './models/data';
 import { COLOR, LidarLine, ROBOT, TOF } from './models/model';
@@ -10,13 +17,20 @@ import { init_socketio_client } from './socketio/socketio-client';
 
 const lidarLines: LidarLine[] = [];
 const robotGroup = new Group();
+const scene = new Scene();
+const renderer = new WebGLRenderer({ antialias: true });
 
 const socket = init_socketio_client(robotGroup, lidarLines);
 
-function main(): void {
-    const renderer = new WebGLRenderer({ antialias: true });
+add_align_button(socket);
+add_option_3d(enable3D, robotGroup, renderer, scene);
+
+function enable3D(): void {
     renderer.setSize(PLATFORM_WIDTH, PLATFORM_HEIGHT);
-    const canvas = document.body.appendChild(renderer.domElement);
+
+    const canvas = (
+        document.querySelector<HTMLDivElement>('#container-3d') as HTMLDivElement
+    ).appendChild(renderer.domElement);
 
     const fov = 45;
     const aspect = 2;
@@ -29,36 +43,48 @@ function main(): void {
     controls.target.set(0, 5, 0);
     controls.update();
 
-    const scene = new Scene();
     scene.background = new Color('black');
 
     initMap(scene);
     addLight(scene);
 
-    initRobot(scene, ROBOT.GRANDE).then((robot) => {
-        const ToFs = [];
+    const isToF = (document.querySelector<HTMLInputElement>('#btn-option-tof') as HTMLInputElement)
+        .checked;
+    const isLidar = (
+        document.querySelector<HTMLInputElement>('#btn-option-lidar') as HTMLInputElement
+    ).checked;
 
-        ToFs.push(getToF(scene, TOF.back_1, 7, COLOR.RED));
-        ToFs.push(getToF(scene, TOF.back_2, 5, COLOR.RED));
-        ToFs.push(getToF(scene, TOF.back_3, 7, COLOR.RED));
-        ToFs.push(getToF(scene, TOF.back_4, 5, COLOR.RED));
+    renderRobot(scene, ROBOT.GRANDE, isLidar, isToF).then(
+        ({ robot, isLidar, isToF }: RenderRobot) => {
+            if (isToF) {
+                const ToFs = [];
 
-        ToFs.push(getToF(scene, TOF.front_1, 4, COLOR.GREEN));
-        ToFs.push(getToF(scene, TOF.front_2, 3, COLOR.GREEN));
-        ToFs.push(getToF(scene, TOF.front_3, 3, COLOR.GREEN));
-        ToFs.push(getToF(scene, TOF.front_4, 3, COLOR.GREEN));
+                ToFs.push(getToF(scene, TOF.back_1, 7, COLOR.RED));
+                ToFs.push(getToF(scene, TOF.back_2, 5, COLOR.RED));
+                ToFs.push(getToF(scene, TOF.back_3, 7, COLOR.RED));
+                ToFs.push(getToF(scene, TOF.back_4, 5, COLOR.RED));
 
-        drawLidarBorder(lidarLines, robotGroup);
-        drawLidarData(lidarLines, robotGroup, LIDAR_SCANDATA_MOCK);
+                ToFs.push(getToF(scene, TOF.front_1, 4, COLOR.GREEN));
+                ToFs.push(getToF(scene, TOF.front_2, 3, COLOR.GREEN));
+                ToFs.push(getToF(scene, TOF.front_3, 3, COLOR.GREEN));
+                ToFs.push(getToF(scene, TOF.front_4, 3, COLOR.GREEN));
 
-        robotGroup.add(robot);
-        robotGroup.add(...ToFs);
+                robotGroup.add(...ToFs);
+            }
 
-        robotGroup.position.x += ROBOT_LENGTH / 2;
-        robotGroup.position.z += -(ROBOT_LENGTH / 2);
+            if (isLidar) {
+                drawLidarBorder(lidarLines, robotGroup);
+                drawLidarData(lidarLines, robotGroup, LIDAR_SCANDATA_MOCK);
+            }
 
-        scene.add(robotGroup);
-    });
+            robotGroup.add(robot);
+
+            robotGroup.position.x += ROBOT_LENGTH / 2;
+            robotGroup.position.z += -(ROBOT_LENGTH / 2);
+
+            scene.add(robotGroup);
+        }
+    );
 
     // setTimeout(() => {
     //     moveRobot(robotGroup, 6, 3);
@@ -87,7 +113,3 @@ function main(): void {
 
     requestAnimationFrame(render);
 }
-
-add_align_button(socket);
-
-main();
