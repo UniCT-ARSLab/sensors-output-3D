@@ -1,6 +1,12 @@
 import { Color, Group, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { add_align_button, add_option_3d } from './helper/dom';
+import {
+    add_align_button,
+    add_option_3d,
+    initChart,
+    resetPidGraphs,
+    showPidGraphs,
+} from './helper/dom';
 import {
     RenderRobot,
     addLight,
@@ -20,11 +26,14 @@ const robotGroup = new Group();
 const scene = new Scene();
 const renderer = new WebGLRenderer({ antialias: true });
 
-const socket = init_socketio_client(robotGroup, lidarLines);
+add_option_3d(enable3D, robotGroup, renderer, scene);
+showPidGraphs();
+
+const chart = initChart();
+const socket = init_socketio_client(robotGroup, lidarLines, chart);
+resetPidGraphs(chart);
 
 add_align_button(socket);
-add_option_3d(enable3D, robotGroup, renderer, scene);
-
 function enable3D(): void {
     renderer.setSize(PLATFORM_WIDTH, PLATFORM_HEIGHT);
 
