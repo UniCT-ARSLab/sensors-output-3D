@@ -1,7 +1,7 @@
 import { Chart } from 'chart.js';
 import { Socket, io } from 'socket.io-client';
 import { Group, Object3DEventMap } from 'three';
-import { moveRobot, rotateRobot } from '../helper/helper';
+import { getQueryParams, moveRobot, rotateRobot } from '../helper/helper';
 import { drawLidarData } from '../helper/lidar_functions';
 import {
     CAN_IDS,
@@ -18,8 +18,9 @@ export function init_socketio_client(
     lidarLines: LidarLine[],
     chart: Chart
 ): Socket {
-    const socket = io('http://127.0.0.1:5000');
-    // const socket = io('http://192.168.70.20:5000');
+    const queryParams = getQueryParams();
+    const ip = queryParams.ip ?? '127.0.0.1';
+    const socket = io(`http://${ip}:5000`);
 
     setTimeout(() => {
         socket.emit('message', { data: 'Hello!' });

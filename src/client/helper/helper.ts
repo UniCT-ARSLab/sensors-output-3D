@@ -21,7 +21,7 @@ import {
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { degToRad } from 'three/src/math/MathUtils';
-import { COLOR, ROBOT, TOF } from '../models/model';
+import { COLOR, QueryParams, Robot, TOF } from '../models/model';
 import { LINEWIDTH, MAP_SRC, MAP_X, MAP_Y, ToF_OBJECT } from '../settings';
 
 export interface RenderRobot {
@@ -89,11 +89,12 @@ export function addLight(scene: Scene): void {
 
 export async function renderRobot(
     scene: Scene,
-    type: ROBOT = ROBOT.GRANDE,
     isLidar = false,
     isToF = false
 ): Promise<RenderRobot> {
     return new Promise<RenderRobot>((resolve) => {
+        const type = getRobotType();
+
         const mtlLoader = new MTLLoader();
         mtlLoader.load(`assets/robot-${type}.mtl`, (mtl) => {
             mtl.preload();
@@ -101,13 +102,28 @@ export async function renderRobot(
             objLoader.setMaterials(mtl);
             objLoader.load(`assets/robot-${type}.obj`, (robot) => {
                 // from the origin dimensions set them /100
-                // robot.scale.set(0.01, 0.01, 0.01);
                 robot.scale.setScalar(0.01);
 
-                if (type == ROBOT.GRANDE) {
-                    robot.rotateX(degToRad(90));
-                    robot.position.y = 3.3;
+                switch (type) {
+                    case Robot.GRANDE:
+                        robot.rotateX(degToRad(90));
+                        robot.position.y = 3.3;
+                        break;
+                    case Robot.PICCOLO:
+                        robot.position.x = 0.2;
+                        robot.position.y = 0.1;
+                        robot.position.z = -0.5;
+                        break;
+                    case Robot.LADYBUG:
+                        robot.position.x = -2.2;
+                        robot.position.y = 1.6;
+                        robot.position.z = 0.3;
+                        robot.rotateY(degToRad(-25));
+                        break;
+                    default:
+                        break;
                 }
+
                 scene.add(robot);
 
                 resolve({ robot, isLidar, isToF });
@@ -153,4 +169,17 @@ export function rotateRobot(robotGrp: Group, angle: number): void {
     if (robotGrp && angle && robotGrp.rotation.y !== degToRad(angle)) {
         robotGrp.rotation.y = degToRad(angle);
     }
+}
+
+export function getQueryParams(): QueryParams {
+    return new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop: string) => searchParams.get(prop),
+    }) as any;
+}
+
+export function getRobotType(): Robot {
+    const queryParams = getQueryParams();
+    const robotType = queryParams.robot ?? Robot.GRANDE;
+
+    return robotType;
 }

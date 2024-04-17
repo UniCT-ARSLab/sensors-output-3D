@@ -29,9 +29,10 @@ export interface LidarLine {
     mesh: Mesh;
 }
 
-export const enum ROBOT {
+export const enum Robot {
     PICCOLO = 'piccolo',
     GRANDE = 'grande',
+    LADYBUG = 'ladybug',
 }
 
 export const enum COLOR {
@@ -79,4 +80,9 @@ export interface RobotWheelsVelocity {
 export interface RobotData extends Position, RobotStatus, DistanceSensor, RobotWheelsVelocity {
     last_packet_id: number;
     linear_speed: number;
+}
+
+export interface QueryParams {
+    ip: string;
+    robot: Robot;
 }

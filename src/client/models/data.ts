@@ -3,6 +3,11 @@
 // export const ROBOT_WIDTH = 300;
 export const ROBOT_LENGTH = 350 / 100;
 
+export const enum RobotIP {
+    GRANDE = '192.168.70.20',
+    PICCOLO = '192.168.70.120', // ladybug
+}
+
 export const LIDAR_TOT_DEADZONE = 1024 - 725 + 44;
 export const POINT_ANGLE = 360 / 1024;
 export const LEFT_START_ANGLE = -(LIDAR_TOT_DEADZONE / 2) * POINT_ANGLE;

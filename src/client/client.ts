@@ -17,7 +17,7 @@ import {
 } from './helper/helper';
 import { drawLidarBorder, drawLidarData } from './helper/lidar_functions';
 import { LIDAR_SCANDATA_MOCK, ROBOT_LENGTH } from './models/data';
-import { COLOR, LidarLine, ROBOT, TOF } from './models/model';
+import { COLOR, LidarLine, TOF } from './models/model';
 import { PLATFORM_HEIGHT, PLATFORM_WIDTH } from './settings';
 import { init_socketio_client } from './socketio/socketio-client';
 
@@ -63,37 +63,35 @@ function enable3D(): void {
         document.querySelector<HTMLInputElement>('#btn-option-lidar') as HTMLInputElement
     ).checked;
 
-    renderRobot(scene, ROBOT.GRANDE, isLidar, isToF).then(
-        ({ robot, isLidar, isToF }: RenderRobot) => {
-            if (isToF) {
-                const ToFs = [];
+    renderRobot(scene, isLidar, isToF).then(({ robot, isLidar, isToF }: RenderRobot) => {
+        if (isToF) {
+            const ToFs = [];
 
-                ToFs.push(getToF(scene, TOF.back_1, 7, COLOR.RED));
-                ToFs.push(getToF(scene, TOF.back_2, 5, COLOR.RED));
-                ToFs.push(getToF(scene, TOF.back_3, 7, COLOR.RED));
-                ToFs.push(getToF(scene, TOF.back_4, 5, COLOR.RED));
+            ToFs.push(getToF(scene, TOF.back_1, 7, COLOR.RED));
+            ToFs.push(getToF(scene, TOF.back_2, 5, COLOR.RED));
+            ToFs.push(getToF(scene, TOF.back_3, 7, COLOR.RED));
+            ToFs.push(getToF(scene, TOF.back_4, 5, COLOR.RED));
 
-                ToFs.push(getToF(scene, TOF.front_1, 4, COLOR.GREEN));
-                ToFs.push(getToF(scene, TOF.front_2, 3, COLOR.GREEN));
-                ToFs.push(getToF(scene, TOF.front_3, 3, COLOR.GREEN));
-                ToFs.push(getToF(scene, TOF.front_4, 3, COLOR.GREEN));
+            ToFs.push(getToF(scene, TOF.front_1, 4, COLOR.GREEN));
+            ToFs.push(getToF(scene, TOF.front_2, 3, COLOR.GREEN));
+            ToFs.push(getToF(scene, TOF.front_3, 3, COLOR.GREEN));
+            ToFs.push(getToF(scene, TOF.front_4, 3, COLOR.GREEN));
 
-                robotGroup.add(...ToFs);
-            }
-
-            if (isLidar) {
-                drawLidarBorder(lidarLines, robotGroup);
-                drawLidarData(lidarLines, robotGroup, LIDAR_SCANDATA_MOCK);
-            }
-
-            robotGroup.add(robot);
-
-            robotGroup.position.x += ROBOT_LENGTH / 2;
-            robotGroup.position.z += -(ROBOT_LENGTH / 2);
-
-            scene.add(robotGroup);
+            robotGroup.add(...ToFs);
         }
-    );
+
+        if (isLidar) {
+            drawLidarBorder(lidarLines, robotGroup);
+            drawLidarData(lidarLines, robotGroup, LIDAR_SCANDATA_MOCK);
+        }
+
+        robotGroup.add(robot);
+
+        robotGroup.position.x += ROBOT_LENGTH / 2;
+        robotGroup.position.z += -(ROBOT_LENGTH / 2);
+
+        scene.add(robotGroup);
+    });
 
     // setTimeout(() => {
     //     moveRobot(robotGroup, 6, 3);

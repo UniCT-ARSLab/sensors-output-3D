@@ -41,6 +41,12 @@ export function add_option_3d(
 }
 
 export function showPidGraphs(): void {
+    (
+        document.querySelector<HTMLCanvasElement>(
+            '#line-chart-container canvas'
+        ) as HTMLCanvasElement
+    ).style.display = 'none';
+
     const inputGraph = document.querySelector<HTMLInputElement>(
         '#btn-option-pid-graphs'
     ) as HTMLInputElement;

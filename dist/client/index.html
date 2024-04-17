@@ -8,24 +8,35 @@
             canvas {
                 margin: 0px auto;
             }
+
+            .menu {
+                text-align: center;
+                margin: auto;
+                width: 100%;
+            }
+            .menu a {
+                border: 1px solid black;
+                padding: 5px;
+            }
         </style>
     </head>
 
     <body>
-        <div>
-            <label> <input type="checkbox" id="btn-option3d" checked="false" /> Enable 3D </label>
+        <div class="menu">
+            <a href="/?ip=127.0.0.1&robot=grande">localhost</a>
+            <a href="/?ip=192.168.70.20&robot=grande">GRANDE</a>
+            <a href="/?ip=192.168.70.120&robot=piccolo">PICCOLO</a>
+            <a href="/?ip=192.168.70.120&robot=ladybug">LADYBUG</a>
+        </div>
+        <br />
+        <div style="float: left">
+            <label> <input type="checkbox" id="btn-option3d" /> Enable 3D </label>
             <br />
-            <label>
-                <input type="checkbox" id="btn-option-tof" checked="false" /> Enable ToF
-            </label>
+            <label> <input type="checkbox" id="btn-option-tof" /> Enable ToF </label>
             <br />
-            <label>
-                <input type="checkbox" id="btn-option-lidar" checked="false" /> Enable LiDAR
-            </label>
+            <label> <input type="checkbox" id="btn-option-lidar" /> Enable LiDAR </label>
             <br />
-            <label>
-                <input type="checkbox" id="btn-option-pid-graphs" checked="false" /> Show PID graphs
-            </label>
+            <label> <input type="checkbox" id="btn-option-pid-graphs" /> Show PID graphs </label>
             <br />
             <button id="btn-align">Send align</button>
             <button id="btn-reset-pid-graphs">Reset PID graphs</button>
