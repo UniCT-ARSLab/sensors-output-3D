@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import {
     add_align_button,
     add_option_3d,
+    fix_deploy_url,
     initChart,
     resetPidGraphs,
     showPidGraphs,
@@ -26,6 +27,7 @@ const robotGroup = new Group();
 const scene = new Scene();
 const renderer = new WebGLRenderer({ antialias: true });
 
+fix_deploy_url();
 add_option_3d(enable3D, robotGroup, renderer, scene);
 showPidGraphs();
 
@@ -120,3 +122,4 @@ function enable3D(): void {
 
     requestAnimationFrame(render);
 }
+enable3D();

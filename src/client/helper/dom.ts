@@ -3,6 +3,14 @@ import { Socket } from 'socket.io-client';
 import { Group, Scene, WebGLRenderer } from 'three';
 import { SocketMessageType } from '../models/model';
 
+export function fix_deploy_url(): void {
+    const links = document.querySelectorAll<HTMLLinkElement>('.menu a');
+    for (const link of links) {
+        const param = link.getAttribute('data-params');
+        link.href = `${location.protocol}//${location.host}${location.pathname}${param}`;
+    }
+}
+
 export function add_align_button(socket: Socket): void {
     const alignBtn = document.querySelector<HTMLButtonElement>('#btn-align') as HTMLButtonElement;
     alignBtn.onclick = function () {
