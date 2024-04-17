@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Eurobot - sensor output</title>
+        <style>
+            canvas {
+                margin: 0px auto;
+            }
+
+            .menu {
+                text-align: center;
+                margin: auto;
+                width: 100%;
+            }
+            .menu a {
+                border: 1px solid black;
+                padding: 5px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="menu">
+            <a href="/?ip=127.0.0.1&robot=grande">localhost</a>
+            <a href="/?ip=192.168.70.20&robot=grande">GRANDE</a>
+            <a href="/?ip=192.168.70.120&robot=piccolo">PICCOLO</a>
+            <a href="/?ip=192.168.70.120&robot=ladybug">LADYBUG</a>
+        </div>
+        <br />
+        <div style="float: left">
+            <label> <input type="checkbox" id="btn-option3d" /> Enable 3D </label>
+            <br />
+            <label> <input type="checkbox" id="btn-option-tof" /> Enable ToF </label>
+            <br />
+            <label> <input type="checkbox" id="btn-option-lidar" /> Enable LiDAR </label>
+            <br />
+            <label> <input type="checkbox" id="btn-option-pid-graphs" /> Show PID graphs </label>
+            <br />
+            <button id="btn-align">Send align</button>
+            <button id="btn-reset-pid-graphs">Reset PID graphs</button>
+        </div>
+
+        <div id="container-3d"></div>
+
+        <div id="line-chart-container">
+            <canvas id="line-chart" style="width: 800px; height: 600px"></canvas>
+        </div>
+
+        <script type="module" src="bundle.js"></script>
+    </body>
+</html>
