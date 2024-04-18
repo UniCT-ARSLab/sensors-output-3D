@@ -1,4 +1,5 @@
 import Chart from 'chart.js/auto';
+import DataTable from 'datatables.net-dt';
 import { Socket } from 'socket.io-client';
 import { Group, Scene, WebGLRenderer } from 'three';
 import { SocketMessageType } from '../models/model';
@@ -33,13 +34,18 @@ export function add_option_3d(
 ): void {
     const input3d = document.querySelector<HTMLInputElement>('#btn-option3d') as HTMLInputElement;
     input3d.onchange = function (event: any): void {
-        const enabled = event.target.checked;
+        const container3D = document.querySelector<HTMLDivElement>(
+            '#container-3d'
+        ) as HTMLDivElement;
+        const enabled = event?.target?.checked;
         if (enabled) {
             robotGroup.clear();
             renderer.clear();
             scene.clear();
             enable3D();
+            container3D.style.display = 'block';
         } else {
+            container3D.style.display = 'none';
             robotGroup.clear();
             scene.clear();
             renderer.clear();
@@ -59,21 +65,31 @@ export function showPidGraphs(): void {
         '#btn-option-pid-graphs'
     ) as HTMLInputElement;
     inputGraph.onchange = function (event: any): void {
-        const enabled = event.target.checked;
+        const canvasGraph = document.querySelector<HTMLCanvasElement>(
+            '#line-chart-container canvas'
+        ) as HTMLCanvasElement;
+        const enabled = event?.target?.checked;
         if (enabled) {
-            const canvasGraph = document.querySelector<HTMLCanvasElement>(
-                '#line-chart-container canvas'
-            ) as HTMLCanvasElement;
             canvasGraph.style.height = '600px';
             canvasGraph.style.width = '800px';
             canvasGraph.style.display = 'block';
         } else {
-            (
-                document.querySelector<HTMLCanvasElement>(
-                    '#line-chart-container canvas'
-                ) as HTMLCanvasElement
-            ).style.display = 'none';
+            canvasGraph.style.display = 'none';
         }
+    };
+}
+
+export function enableCANPacketViewer(): void {
+    const divContainer = document.querySelector<HTMLDivElement>(
+        '#can-packet-viewer'
+    ) as HTMLDivElement;
+    const inputCanPacket = document.querySelector<HTMLInputElement>(
+        '#btn-option-can-packet'
+    ) as HTMLInputElement;
+    const table = new DataTable('#can-packet-table');
+    inputCanPacket.onchange = function (event: any): void {
+        const enabled = event.target.checked;
+        divContainer.style.display = enabled ? 'block' : 'none';
     };
 }
 

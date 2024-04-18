@@ -47,10 +47,10 @@ export function init_socketio_client(
                 break;
             case CAN_IDS.ROBOT_WHEELS_VELOCITY:
                 {
-                    console.log('CAN PACKET ROBOT WHEELS', data);
+                    // console.log('CAN PACKET ROBOT WHEELS', data);
                     const { wheel, current_speed, target_speed, pwm } = data;
                     cumulative_robot_wheels.push({ wheel, current_speed, target_speed, pwm });
-                    console.log(cumulative_robot_wheels);
+                    // console.log(cumulative_robot_wheels);
 
                     chart.data.datasets[0].data.push(wheel);
                     chart.data.datasets[1].data.push(current_speed);
@@ -63,6 +63,8 @@ export function init_socketio_client(
             default:
                 break;
         }
+
+        console.log('can packet: ', data);
     });
 
     socket.on(SocketMessageType.LIDAR_DATA, (data) => {

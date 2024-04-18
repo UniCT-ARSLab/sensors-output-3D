@@ -32,20 +32,36 @@
         <div style="float: left">
             <label> <input type="checkbox" id="btn-option3d" checked /> Enable 3D </label>
             <br />
-            <label> <input type="checkbox" id="btn-option-tof" /> Enable ToF </label>
+            <label> <input type="checkbox" id="btn-option-can-packet" /> Show CAN packet </label>
             <br />
-            <label> <input type="checkbox" id="btn-option-lidar" /> Enable LiDAR </label>
-            <br />
+            <!-- <label> <input type="checkbox" id="btn-option-tof" /> Enable ToF </label>
+            <br /> -->
+            <!-- <label> <input type="checkbox" id="btn-option-lidar" /> Enable LiDAR </label>
+            <br /> -->
             <label> <input type="checkbox" id="btn-option-pid-graphs" /> Show PID graphs </label>
             <br />
-            <button id="btn-align">Send align</button>
             <button id="btn-reset-pid-graphs">Reset PID graphs</button>
+            <button id="btn-align">Send align</button>
         </div>
 
         <div id="container-3d"></div>
 
         <div id="line-chart-container">
             <canvas id="line-chart" style="width: 800px; height: 600px"></canvas>
+        </div>
+
+        <div id="can-packet-viewer" style="display: none">
+            <table id="can-packet-table" class="display">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>ID</th>
+                        <th>S</th>
+                        <th>DL</th>
+                        <th>Channel</th>
+                    </tr>
+                </thead>
+            </table>
         </div>
 
         <script type="module" src="bundle.js"></script>

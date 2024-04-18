@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import {
     add_align_button,
     add_option_3d,
+    enableCANPacketViewer,
     fix_deploy_url,
     initChart,
     resetPidGraphs,
@@ -30,6 +31,7 @@ const renderer = new WebGLRenderer({ antialias: true });
 fix_deploy_url();
 add_option_3d(enable3D, robotGroup, renderer, scene);
 showPidGraphs();
+enableCANPacketViewer();
 
 const chart = initChart();
 const socket = init_socketio_client(robotGroup, lidarLines, chart);
@@ -59,11 +61,12 @@ function enable3D(): void {
     initMap(scene);
     addLight(scene);
 
-    const isToF = (document.querySelector<HTMLInputElement>('#btn-option-tof') as HTMLInputElement)
-        .checked;
-    const isLidar = (
-        document.querySelector<HTMLInputElement>('#btn-option-lidar') as HTMLInputElement
-    ).checked;
+    const isToF =
+        (document.querySelector<HTMLInputElement>('#btn-option-tof') as HTMLInputElement)
+            ?.checked || false;
+    const isLidar =
+        (document.querySelector<HTMLInputElement>('#btn-option-lidar') as HTMLInputElement)
+            ?.checked || false;
 
     renderRobot(scene, isLidar, isToF).then(({ robot, isLidar, isToF }: RenderRobot) => {
         if (isToF) {
@@ -122,4 +125,4 @@ function enable3D(): void {
 
     requestAnimationFrame(render);
 }
-enable3D();
+// enable3D();
